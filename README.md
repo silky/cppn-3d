@@ -10,6 +10,9 @@ TODO:
 
   - [ ] Set up a dynamic system
 
+  - [ ] Allow loading custom models which could be trained on arbitrary things (fashion-mnist, etc)
+      
+
 
 Links:
 
