@@ -2,7 +2,9 @@
 
 ![](images/ex1.png)
 
-TODO:
+[View Live!](https://silky.github.io/cppn-3d/src/index.html)
+
+### TODO:
 
   - [x] Set up base yarn project
 
