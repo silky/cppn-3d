@@ -1,32 +1,21 @@
 # CPPN in 3d!
 
+![](images/ex1.png)
+
 TODO:
 
-  - [ ] Set up base yarn project
+  - [x] Set up base yarn project
 
-  - [ ] Build cppn in tensorflow.js
+  - [x] Build cppn in tensorflow.js
 
-  - [ ] Simply render a random cppn in threejs
+  - [x] Simply render a random cppn in threejs
 
-  - [ ] Set up a dynamic system
+  - [x] Set up a dynamic system
 
   - [ ] Allow loading custom models which could be trained on arbitrary things (fashion-mnist, etc)
+
+  - [ ] Make it render way better
+
+
       
 
-
-Links:
-
-  - https://github.com/mrdoob/three.js/blob/master/examples/webgl_points_billboards_colors.html
-
-  - https://unity3d.com/learn/tutorials/topics/graphics/terrain-introduction-heightmaps
-
-  - https://docs.unity3d.com/Manual/StandardShaderMaterialParameterHeightMap.html
-
-  - https://github.com/mrdoob/three.js/blob/master/examples/webgl_interactive_points.html
-
-  - http://blog.mastermaps.com/2014/10/3d-terrains-with-cesium.html
-
-
-Ideas:
-
-  - Add a CPPN variable for the height too?
