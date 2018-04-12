@@ -1,0 +1,44 @@
+<html>
+  <head>
+    <title>3d cppn</title>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.8.0"> </script> -->
+    <script src="js/tfjs@0.8.0.js"> </script>
+    <script src="js/threejs/three.min.js"> </script>
+    <script src="js/threejs/OrbitControls.js"> </script>
+    <script src="js/threejs/stats.min.js"> </script>
+    <script src="js/threejs/Detector.js"> </script>
+    <script src="js/three-d.js"> </script>
+
+    <script src="js/model.js"> </script>
+    <style type="text/css">
+        canvas {
+            border:          solid 1px black;
+            height:          200px;
+            width:           200px;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        body {
+            background-color: black;
+            margin:           0px;
+            overflow:         hidden;
+            font-family:      Monospace;
+            font-size:        13px;
+            text-align:       center;
+            font-weight:      bold;
+            text-align:       center;
+        }
+    </style>
+  </head>
+  <body>
+      <canvas height="80" width="80" id="cppn-canvas" />
+
+      <script>
+        animateCppn("cppn-canvas");
+      </script>
+  </body>
+</html>
+
