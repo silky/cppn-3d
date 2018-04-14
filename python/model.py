@@ -86,7 +86,7 @@ def stitch_together (yss):
     for r in range(rows):
         elts = np.take(yss, range(r*rows, (r+1)*rows), axis=0)
         elts = np.concatenate(elts, axis=1)
-        result.append(t)
+        result.append(elts)
 
     result = np.array(result)
     result = np.concatenate(result, axis=0)
