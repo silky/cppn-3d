@@ -17,27 +17,21 @@ Config = namedtuple("Config",
                     , "latent_dim"
                     , "activation_function"
                     , "colours"
-                    , "norm"
-                      # = ["top"] or ["top", "bottom"]
-                    , "border_matchings"
+                    , "norms"
                     ])
 
 Model = namedtuple("Model",
                     [ "z"
-                    , "matching_loss"
-                    , "matching_pixels"
                     , "xs" # Input
                     , "ys" # Output
                     ])
 
 
-def build_model (config, width, height):
-    init = tf.random_normal_initializer(mean=0, stddev=1)
+def build_model (config):
 
+    init       = tf.random_normal_initializer(mean=0, stddev=1)
     coord_dims = config.input_size - config.latent_dim
-
-    xs              = tf.placeholder(tf.float32, shape = [ None, coord_dims ])
-    matching_pixels = tf.placeholder(tf.float32, shape = [ None, None, coord_dims ])
+    xs         = tf.placeholder(tf.float32, shape = [ None, coord_dims ])
 
     # By default z will take on some random normal value.
     z_val = np.random.normal(0, 1, size=config.latent_dim)
@@ -55,38 +49,10 @@ def build_model (config, width, height):
                            )
 
     ys = tf.layers.dense(h, config.colours, activation = tf.nn.sigmoid)
-    ys = tf.reshape(ys, (width, height, config.colours))
-
-    side_indexes = { "top":    (0, 1)
-                   , "left":   (0, 1)
-                   , "bottom": (height - 1, height)
-                   , "right":  (width - 1, width)
-                   }
-
-    pixels = []
-
-    for match_side in config.border_matchings:
-        a, b = side_indexes[match_side]
-
-        if match_side in ["top", "bottom"]:
-            our_pixels = ys[a:b, :, :]
-        else:
-            our_pixels = tf.transpose(ys[:, a:b, :], perm=[1, 0, 2])
-
-        pixels.append( our_pixels )
-
-
-    if len(config.border_matchings) > 0:
-        pixels        = tf.concat( pixels, axis = 0 )
-        matching_loss = tf.norm(our_pixels - matching_pixels, ord=2)
-    else:
-        matching_loss = None
 
     model = Model( xs = xs
                  , ys = ys
                  , z  = z
-                 , matching_loss   = matching_loss
-                 , matching_pixels = matching_pixels
                  )
 
     return model
@@ -101,8 +67,8 @@ def get_input_data (config, width, height):
 
 def get_input_data_ (config, x, y):
     xx, yy = np.meshgrid(x, y)
-    zz     = config.norm([xx, yy])
-    r      = np.array([ xx.ravel(), yy.ravel(), zz.ravel() ])
+    zz     = [ f([xx, yy]).ravel() for f in config.norms ]
+    r      = np.array([ xx.ravel(), yy.ravel()] + zz )
     return np.transpose(r)
 
 
@@ -114,7 +80,7 @@ def stitch_together (yss):
 
         yss = [a, b, c, d]
 
-        image (400x400)
+        image (512x512)
              = 
                  a | b
                  -----
@@ -123,7 +89,7 @@ def stitch_together (yss):
         and that everything will be a square, so e.g.
 
         yss = [a, b, c, d, e, f, g, h, i, j]
-        image (600x600)
+        image (768x768)
              = 
 
                  a | b | c
@@ -155,7 +121,7 @@ def forward (sess, config, model, z, width, height):
     # For convenience, let's make quite harsh restrictions.
     assert width == height
 
-    max_size = 200
+    max_size = 256
     if width > max_size:
         assert width  % max_size == 0
         # We just want to call "get_input_data_" with a subset
@@ -181,19 +147,16 @@ def forward (sess, config, model, z, width, height):
 
                 xs = get_input_data_(config, x, y)
                 ys = forward_(sess, config, model, z, max_size, max_size, xs)
+                ys = np.reshape(ys, (max_size, max_size, config.colours))
+
                 results.append(ys)
 
         return np.array(results)
     else:
         xs = get_input_data(config, width, height)
         ys = forward_(sess, config, model, z, width, height, xs)
+        ys = np.reshape(ys, (max_size, max_size, config.colours))
         return np.array([ys])
-
-
-def find_matching (config, model, matching_image):
-    #
-    #
-    pass
 
 
 def forward_ (sess, config, model, z, width, height, xs):
