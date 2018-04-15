@@ -37,17 +37,6 @@ def build_model (config, width, height):
     coord_dims = config.input_size - config.latent_dim
 
     xs              = tf.placeholder(tf.float32, shape = [ None, coord_dims ])
-
-    # Everything will be arranged as:
-    #
-    #  [ x0 , w0
-    #  , x1 , w1
-    #  , x2 , w2
-    #  , .    .
-    #  , .    .
-    #  , .    .
-    #  ]
-    
     matching_pixels = tf.placeholder(tf.float32, shape = [ None, None, coord_dims ])
 
     # By default z will take on some random normal value.
