@@ -18,25 +18,93 @@ Config = namedtuple("Config",
                     , "activation_function"
                     , "colours"
                     , "norm"
+                      # = ["top"] or ["top", "bottom"]
+                    , "border_matchings"
+                    ])
+
+Model = namedtuple("Model",
+                    [ "z"
+                    , "matching_loss"
+                    , "matching_pixels"
+                    , "xs" # Input
+                    , "ys" # Output
                     ])
 
 
-def build_model (config):
-    model = Sequential()
-    init  = tf.random_normal_initializer(mean=0, stddev=1)
+def build_model (config, width, height):
+    init = tf.random_normal_initializer(mean=0, stddev=1)
+
+    coord_dims = config.input_size - config.latent_dim
+
+    xs              = tf.placeholder(tf.float32, shape = [ None, coord_dims ])
+
+    # Everything will be arranged as:
+    #
+    #  [ x0 , w0
+    #  , x1 , w1
+    #  , x2 , w2
+    #  , .    .
+    #  , .    .
+    #  , .    .
+    #  ]
+    
+    matching_pixels = tf.placeholder(tf.float32, shape = [ None, None, coord_dims ])
+
+    # By default z will take on some random normal value.
+    z_val = np.random.normal(0, 1, size=config.latent_dim)
+    z     = tf.Variable(z_val, dtype=tf.float32)
+
+    ones = tf.ones([tf.shape(xs)[0], 1])
+    h    = tf.concat([xs, ones * z], axis = 1)
 
     for k in range(config.num_dense):
-        model.add(Dense( config.net_size
-                       , batch_input_shape  = (None, config.input_size)
-                       , kernel_initializer = init
-                       , bias_initializer   = init
-                       , activation         = config.activation_function))
+        h = tf.layers.dense( h
+                           , config.net_size
+                           , activation         = config.activation_function
+                           , kernel_initializer = init
+                           , bias_initializer   = init
+                           )
 
-    model.add(Dense(config.colours, activation = "sigmoid"))
+    ys = tf.layers.dense(h, config.colours, activation = tf.nn.sigmoid)
+    ys = tf.reshape(ys, (width, height, config.colours))
+
+    side_indexes = { "top":    (0, 1)
+                   , "left":   (0, 1)
+                   , "bottom": (height - 1, height)
+                   , "right":  (width - 1, width)
+                   }
+
+    pixels = []
+
+    for match_side in config.border_matchings:
+        a, b = side_indexes[match_side]
+
+        if match_side in ["top", "bottom"]:
+            our_pixels = ys[a:b, :, :]
+        else:
+            our_pixels = tf.transpose(ys[:, a:b, :], perm=[1, 0, 2])
+
+        pixels.append( our_pixels )
+
+
+    if len(config.border_matchings) > 0:
+        pixels        = tf.concat( pixels, axis = 0 )
+        matching_loss = tf.norm(our_pixels - matching_pixels, ord=2)
+    else:
+        matching_loss = None
+
+    model = Model( xs = xs
+                 , ys = ys
+                 , z  = z
+                 , matching_loss   = matching_loss
+                 , matching_pixels = matching_pixels
+                 )
+
     return model
 
 
 def get_input_data (config, width, height):
+    # Note: Changing the numbers here can have interesting results
     x = np.linspace(-1, 1, num = width)
     y = np.linspace(-1, 1, num = height)
     return get_input_data_(config, x, y)
@@ -94,7 +162,7 @@ def stitch_together (yss):
     return result
 
 
-def forward (config, model, z, width, height):
+def forward (sess, config, model, z, width, height):
     # For convenience, let's make quite harsh restrictions.
     assert width == height
 
@@ -123,22 +191,22 @@ def forward (config, model, z, width, height):
                 x  = np.arange(x0, x0 + step, step_size)
 
                 xs = get_input_data_(config, x, y)
-                ys = forward_(config, model, z, max_size, max_size, xs)
+                ys = forward_(sess, config, model, z, max_size, max_size, xs)
                 results.append(ys)
 
         return np.array(results)
     else:
         xs = get_input_data(config, width, height)
-        ys = forward_(config, model, z, width, height, xs)
+        ys = forward_(sess, config, model, z, width, height, xs)
         return np.array([ys])
 
 
-def forward_ (config, model, z, width, height, xs):
+def find_matching (config, model, matching_image):
+    #
+    #
+    pass
 
-    ones = np.ones([xs.shape[0], 1])
 
-    xs   = np.concatenate([xs, ones * z], axis=1)
-    ys   = model.predict(xs)
-    ys   = np.reshape(ys, (width, height, config.colours))
-
+def forward_ (sess, config, model, z, width, height, xs):
+    ys = sess.run( model.ys, feed_dict = { model.z: z, model.xs: xs } )
     return ys
