@@ -17,5 +17,7 @@
   - [ ] Allow loading custom models which could be trained on arbitrary things (fashion-mnist, etc)
 
 
+Also check out the `python` folder and the related
+[blogpost](https://silky.github.io/posts/2018-04-15-cppns-for-procedural-landscape-generation.html).
       
 
