@@ -12,10 +12,9 @@ from tensorflow.python.keras.layers import Dense
 
 Config = namedtuple("Config", 
                     [ "net_size"
-                    , "num_dense"
                     , "input_size"
                     , "latent_dim"
-                    , "activation_function"
+                    , "activations"
                     , "colours"
                     , "norms"
                     ])
@@ -40,10 +39,10 @@ def build_model (config):
     ones = tf.ones([tf.shape(xs)[0], 1])
     h    = tf.concat([xs, ones * z], axis = 1)
 
-    for k in range(config.num_dense):
+    for func in config.activations:
         h = tf.layers.dense( h
                            , config.net_size
-                           , activation         = config.activation_function
+                           , activation         = func
                            , kernel_initializer = init
                            , bias_initializer   = init
                            )
